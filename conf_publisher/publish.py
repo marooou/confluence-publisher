@@ -86,7 +86,7 @@ class Publisher(object):
             mutators.append(AnchorPageMutator(old_title))
 
         return mutators
-
+        
     def _pages_to_update(self, force=False, watermark=False, hold_titles=False):
         pages_to_update = []
         for page_config in flatten_page_config_list(self._config.pages):
@@ -115,7 +115,9 @@ class Publisher(object):
                 attachments_to_update.append(page_attachment)
         return attachments_to_update
 
-    def publish(self, force=False, watermark=False, hold_titles=False):
+    def publish(self, force=False, watermark=False, hold_titles=False, auto_create=False):
+        if auto_create:
+            self._page_manager.make_pages(self._config, self._config.parent_page)
         pages_to_update = self._pages_to_update(force, watermark, hold_titles)
         attachments_to_update = self._attachments_to_update(force)
 
@@ -179,6 +181,7 @@ def main():
     parser.add_argument('-l', '--link', type=str, help='Overrides page link. If value is "False" then removes the link.')
     parser.add_argument('-ht', '--hold-titles', action='store_true', help='Do not change page titles while publishing.')
     parser.add_argument('-v', '--verbose', action='count')
+    parser.add_argument('-ac', '--auto-create', action='store_true', help='Create pages when they don\'t exist.')
 
     args = parser.parse_args()
     auth = parse_authentication(args.auth, args.user)
@@ -190,7 +193,7 @@ def main():
 
     confluence_api = create_confluence_api(DEFAULT_CONFLUENCE_API_VERSION, config.url, auth)
     publisher = create_publisher(config, confluence_api)
-    publisher.publish(args.force, args.watermark, args.hold_titles)
+    publisher.publish(args.force, args.watermark, args.hold_titles, args.auto_create)
 
 if __name__ == '__main__':
     main()

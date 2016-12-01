@@ -12,6 +12,8 @@ class Config(object):
         self.downloads_dir = None
         self.images_dir = None
         self.source_ext = None
+        self.space_key = None
+        self.parent_page = None
         self.pages = list()
 
     def __eq__(self, other):
@@ -107,7 +109,7 @@ class ConfigLoader:
 
         config = Config()
 
-        for attr in ('url', 'base_dir', 'downloads_dir', 'images_dir', 'source_ext'):
+        for attr in ('url', 'base_dir', 'downloads_dir', 'images_dir', 'source_ext', 'space_key', 'parent_page'):
             if attr in config_dict:
                 setattr(config, attr, config_dict[attr])
 
@@ -161,7 +163,7 @@ class ConfigDumper:
     def to_dict(cls, config):
         config_dict = OrderedDict(version=2)
 
-        for attr in ('url', 'base_dir', 'downloads_dir', 'images_dir', 'source_ext'):
+        for attr in ('url', 'base_dir', 'downloads_dir', 'images_dir', 'source_ext', 'space_key', 'parent_page'):
             attr_value = getattr(config, attr)
             if attr_value:
                 config_dict[attr] = attr_value

@@ -1,6 +1,7 @@
 import os
 import copy
 from operator import attrgetter
+from . import log
 
 try:
     from lxml import etree
@@ -79,23 +80,36 @@ class ConfluenceManager(object):
 
 class ConfluencePageManager(ConfluenceManager):
 
+    def make_pages(self, config, parent_id=None):
+        parent_page = None
+        if parent_id:
+            parent_page = self.load(parent_id)
+
+        for page_config in config.pages:
+            if not page_config.id:
+                if not parent_page:
+                    log.warning('Page without id and parent page. Skip.')
+                elif not page_config.title:
+                    log.warning('Page without title. Skip. Parent page id: {parent_id}.'.format(parent_id=parent_id))
+                else:
+                    page_config.id = self._get_or_make_page(parent_page, page_config.title)
+                    log.info('Page with id {page_id} has been created. Parent page id: {parent_id}'
+                            .format(page_id=page_config.id, parent_id=parent_page.id))
+            else:
+                log.info('Skip page with id {page_id}'.format(page_id=page_config.id))
+
+            if len(page_config.pages):
+                self.make_pages(page_config, page_config.id)
+
+    def load_by_title(self, space_key, title):
+        data = self._api.list_content(space_key=space_key, title=title, expand='ancestors,version,space,body.storage', limit=1)
+        if data['size']:
+            return self._deserialize_page(data['results'][0])
+        return None
+        
     def load(self, content_id):
         data = self._api.get_content(content_id, 'ancestors,version,space,body.storage')
-        p = Page()
-        p.id = data['id']
-        p.type = data['type']
-        p.version_number = data['version']['number']
-        p.space_key = data['space']['key']
-        p.title = data['title']
-        p.body = data['body']['storage']['value']
-
-        for ancestor_data in data['ancestors']:
-            ancestor = Ancestor()
-            ancestor.id = ancestor_data['id']
-            ancestor.type = ancestor_data['type']
-            p.ancestors.append(ancestor)
-
-        return p
+        return self._deserialize_page(data)
 
     def create(self, page):
         ancestor = page.ancestors[-1]
@@ -118,6 +132,45 @@ class ConfluencePageManager(ConfluenceManager):
         ret = self._api.update_content(page.id, data)
         page.id = ret['id']
         return page.id
+
+    def _deserialize_page(self, data):
+        p = Page()
+        p.id = data['id']
+        p.type = data['type']
+        p.version_number = data['version']['number']
+        p.space_key = data['space']['key']
+        p.title = data['title']
+        p.body = data['body']['storage']['value']
+
+        for ancestor_data in data['ancestors']:
+            ancestor = Ancestor()
+            ancestor.id = ancestor_data['id']
+            ancestor.type = ancestor_data['type']
+            p.ancestors.append(ancestor)
+
+        return p
+
+    def _empty_page(self, space_key, title, ancestor_id, ancestor_type):
+        ancestor = Ancestor()
+        ancestor.id = ancestor_id
+        ancestor.type = ancestor_type
+
+        page = Page()
+        page.space_key = space_key
+        page.title = title
+        page.body = ''
+        page.ancestors.append(ancestor)
+
+        return page
+
+    def _get_or_make_page(self, parent_page, title):
+        existing_page = self.load_by_title(parent_page.space_key, title)
+        if existing_page:
+            return existing_page.id
+
+        page = self._empty_page(parent_page.space_key, title, parent_page.id, parent_page.type)
+        page_id = self.create(page)
+        return int(page_id)
 
     @staticmethod
     def _page_payload(space_key, body=None, title=None,
