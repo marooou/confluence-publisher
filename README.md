@@ -72,6 +72,7 @@ optional arguments:
                         the link.
   -ht, --hold-titles    Do not change page titles while publishing.
   -v, --verbose
+  -ac, --auto-create    Auto create pages on-the-fly when they do not exist.
 ```
 
 
@@ -131,6 +132,8 @@ Directives:
 - **downloads_dir** (optional) Default is _downloads
 - **images_dir** (optional) Default is _images
 - **source_ext** (optional) Default is .fjson
+- **space_key** (required) The key for a space where the documentation should be created.
+- **parent_page** (required) A page id which should be the root node for the documentation.
 - **pages** (required) Pages to be published.
 
     - **id** (required)  Confluence page ID. If page does not exists, create it with ``conf_page_maker``.

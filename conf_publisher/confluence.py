@@ -93,8 +93,6 @@ class ConfluencePageManager(ConfluenceManager):
                     log.warning('Page without title. Skip. Parent page id: {parent_id}.'.format(parent_id=parent_id))
                 else:
                     page_config.id = self._get_or_make_page(parent_page, page_config.title)
-                    log.info('Page with id {page_id} has been created. Parent page id: {parent_id}'
-                            .format(page_id=page_config.id, parent_id=parent_page.id))
             else:
                 log.info('Skip page with id {page_id}'.format(page_id=page_config.id))
 
@@ -166,10 +164,13 @@ class ConfluencePageManager(ConfluenceManager):
     def _get_or_make_page(self, parent_page, title):
         existing_page = self.load_by_title(parent_page.space_key, title)
         if existing_page:
+            log.info('Page \'{page_title}\' (id={page_id}, parent_id={parent_id}) already exists.'.format(page_id = existing_page.id, page_title=title, parent_id = parent_page.id))
             return existing_page.id
 
         page = self._empty_page(parent_page.space_key, title, parent_page.id, parent_page.type)
         page_id = self.create(page)
+
+        log.info('Page \'{page_title}\' (id={page_id}, parent_id={parent_id}) has been created.'.format(page_id = page_id, page_title=title, parent_id = parent_page.id))
         return int(page_id)
 
     @staticmethod
