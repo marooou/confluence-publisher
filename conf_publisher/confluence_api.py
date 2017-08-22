@@ -52,6 +52,9 @@ class ConfluenceRestApiBase(object):
     def _request(self, requester, url, **kwargs):
         if 'headers' not in kwargs:
             kwargs['headers'] = self.headers
+        if 'additional_headers' in kwargs:
+            kwargs['headers'].update(kwargs['additional_headers'])
+            del kwargs['additional_headers']
 
         log.debug('Request URL: %s', url)
         log.debug('Request Arguments: %s', kwargs)

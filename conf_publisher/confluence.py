@@ -131,6 +131,20 @@ class ConfluencePageManager(ConfluenceManager):
         page.id = ret['id']
         return page.id
 
+    def fix_order(self, config):
+        below = None
+        for page_config in config.pages:
+            if below is not None:
+                log.info('Moving {page_title} below {below_title}'.format(page_title=page_config.title, below_title=below.title))
+                self._api._get('{url}/pages/movepage.action?pageId={page_id}&position=below&targetId={target_id}'
+                               .format(url=self._api.confluence_url, page_id=page_config.id, target_id=below.id),
+                               additional_headers={'X-Atlassian-Token': 'no-check'})
+
+            below = page_config
+
+            if len(page_config.pages):
+                self.fix_order(page_config)
+
     def _deserialize_page(self, data):
         p = Page()
         p.id = data['id']

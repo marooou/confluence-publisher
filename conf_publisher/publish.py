@@ -115,7 +115,7 @@ class Publisher(object):
                 attachments_to_update.append(page_attachment)
         return attachments_to_update
 
-    def publish(self, force=False, watermark=False, hold_titles=False, auto_create=False):
+    def publish(self, force=False, watermark=False, hold_titles=False, auto_create=False, fix_order=False):
         if auto_create:
             self._page_manager.make_pages(self._config, self._config.parent_page)
         pages_to_update = self._pages_to_update(force, watermark, hold_titles)
@@ -126,6 +126,10 @@ class Publisher(object):
 
         log.info('Publishing attachments...')
         self._publish_attachments(attachments_to_update)
+
+        if fix_order:
+            log.info('Fixing page order...')
+            self._page_manager.fix_order(self._config)
 
     def _publish_pages(self, pages):
         for page in pages:
@@ -182,6 +186,8 @@ def main():
     parser.add_argument('-ht', '--hold-titles', action='store_true', help='Do not change page titles while publishing.')
     parser.add_argument('-v', '--verbose', action='count')
     parser.add_argument('-ac', '--auto-create', action='store_true', help='Create pages when they don\'t exist.')
+    parser.add_argument('-fo', '--fix-order', action='store_true', help='Fix ordering of the pages so that it matches '
+                                                                        'the order in the config file.')
 
     args = parser.parse_args()
     auth = parse_authentication(args.auth, args.user)
@@ -193,7 +199,7 @@ def main():
 
     confluence_api = create_confluence_api(DEFAULT_CONFLUENCE_API_VERSION, config.url, auth)
     publisher = create_publisher(config, confluence_api)
-    publisher.publish(args.force, args.watermark, args.hold_titles, args.auto_create)
+    publisher.publish(args.force, args.watermark, args.hold_titles, args.auto_create, args.fix_order)
 
 if __name__ == '__main__':
     main()

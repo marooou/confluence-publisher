@@ -49,7 +49,7 @@ to create a page and page ID will be put into config automatically.
 
 ```
 usage: conf_publisher [-h] [-u URL] (-a AUTH | -U USER) [-F] [-w WATERMARK]
-                      [-l LINK] [-ht] [-v]
+                      [-l LINK] [-ht] [-v] [-ac] [-fo]
                       config
 
 Publish documentation (Sphinx fjson) to Confluence
@@ -73,6 +73,8 @@ optional arguments:
   -ht, --hold-titles    Do not change page titles while publishing.
   -v, --verbose
   -ac, --auto-create    Auto create pages on-the-fly when they do not exist.
+  -fo, --fix-order      Fix ordering of the pages so that it matches the order
+                        in the configuration file.
 ```
 
 
